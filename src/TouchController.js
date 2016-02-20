@@ -13,6 +13,7 @@
     var movingtimer;
     
     var dragging = false,
+      isTap = false,
       touchStartX,
       touchStartY,
       lasttouchX,
@@ -41,6 +42,7 @@
     function onTouchStart(evt){
       evt.preventDefault(); // enablePreventDefault
       dragging = true;
+      isTap = true;
       touchStartTime = Date.now();
       
       touchStartX = (touchsupport) ? evt.originalEvent.touches[0].pageX : evt.pageX;
@@ -66,6 +68,8 @@
       deltaY = touchY - lasttouchY;
       moveX  = touchX - touchStartX;
       moveY  = touchY - touchStartY;
+      
+      isTap = false;
       
       // console.log("touchmove", touchX, touchY, deltaX, deltaY, moveX, moveY);
       _this.trigger("touchmove", {
@@ -96,6 +100,7 @@
         "touchEndY"  : touchEndY,
         "moveX"      : moveX,
         "moveY"      : moveY,
+        "isTap"      : isTap,
       });
       
       touchX = touchY = null;

@@ -12,7 +12,7 @@
     
     var movingtimer;
     
-    var dragging = false,
+    var isDragging = false,
       isTap = false,
       touchStartX,
       touchStartY,
@@ -41,7 +41,7 @@
     
     function onTouchStart(evt){
       evt.preventDefault(); // enablePreventDefault
-      dragging = true;
+      isDragging = true;
       isTap = true;
       touchStartTime = Date.now();
       
@@ -58,7 +58,7 @@
       //return false; // enableReturnFalse
     }
     function ontouchMove(evt){
-      if (!dragging) return;
+      if (!isDragging) return;
       lasttouchX = touchX || touchStartX;
       lasttouchY = touchY || touchStartY;
       
@@ -84,10 +84,10 @@
       });
       
       // clearTimeout(movingtimer);
-      // movingtimer = setTimeout(function(){ dragging = false; },1000);
+      // movingtimer = setTimeout(function(){ isDragging = false; },1000);
     }
     function onTouchEnd(evt){
-      dragging = false;
+      isDragging = false;
       
       elapsedTime = Date.now() - touchStartTime;
       touchEndX = touchX;

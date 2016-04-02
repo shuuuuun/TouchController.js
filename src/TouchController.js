@@ -1,19 +1,32 @@
-(function(win, doc){
-  var ns = win.App = win.App || {};
-  
-  ns.TouchController = function($element){
-    ns.EventDispatcher.call(this);
-    var _this = this;
-    
-    var touchsupport = ("ontouchstart" in window);
-    var touchstart = (touchsupport) ? "touchstart" : "mousedown";
-    var touchmove  = (touchsupport) ? "touchmove"  : "mousemove";
-    var touchend   = (touchsupport) ? "touchend"   : "mouseup";
-    
-    var movingtimer;
-    
-    var isDragging = false,
-      isTap = false,
+import $ from 'jquery';
+import { EventEmitter2 } from 'eventemitter2';
+
+class TouchController extends EventEmitter2 {
+  constructor($element) {
+    super();
+
+    this.touchsupport = ("ontouchstart" in window);
+    this.touchstart = (this.touchsupport) ? "touchstart" : "mousedown";
+    this.touchmove  = (this.touchsupport) ? "touchmove"  : "mousemove";
+    this.touchend   = (this.touchsupport) ? "touchend"   : "mouseup";
+
+  }
+
+  setElement($element) {
+    $element
+      .on(this.touchstart, onTouchStart)
+      .on(this.touchmove, ontouchMove)
+      .on(this.touchend, onTouchEnd);
+
+    // $(document)
+    //   .on(touchstart, function(){ return false; }) // disableDocumentTouch
+    //   .on(touchmove, ontouchMove)
+    //   .on(touchend, onTouchEnd);
+
+    let _this = this;
+
+    let isDragging = false,
+      movingtimer,
       touchStartX,
       touchStartY,
       lasttouchX,
@@ -28,51 +41,38 @@
       touchEndY,
       touchStartTime,
       elapsedTime;
-    
-    $element
-      .on(touchstart, onTouchStart)
-      .on(touchmove, ontouchMove)
-      .on(touchend, onTouchEnd);
-    
-    // $(document)
-    //   .on(touchstart, function(){ return false; }) // disableDocumentTouch
-    //   .on(touchmove, ontouchMove)
-    //   .on(touchend, onTouchEnd);
-    
+
     function onTouchStart(evt){
       evt.preventDefault(); // enablePreventDefault
       isDragging = true;
-      isTap = true;
       touchStartTime = Date.now();
-      
-      touchStartX = (touchsupport) ? evt.originalEvent.touches[0].pageX : evt.pageX;
-      touchStartY = (touchsupport) ? evt.originalEvent.touches[0].pageY : evt.pageY;
-      
+
+      touchStartX = (_this.touchsupport) ? evt.originalEvent.touches[0].pageX : evt.pageX;
+      touchStartY = (_this.touchsupport) ? evt.originalEvent.touches[0].pageY : evt.pageY;
+
       // console.log("touchstart");
-      _this.trigger("touchstart", {
+      _this.emit("touchstart", {
         "touchStartTime": touchStartTime,
         "touchStartX"   : touchStartX,
         "touchStartY"   : touchStartY,
       });
-      
+
       //return false; // enableReturnFalse
     }
     function ontouchMove(evt){
       if (!isDragging) return;
       lasttouchX = touchX || touchStartX;
       lasttouchY = touchY || touchStartY;
-      
-      touchX = (touchsupport) ? evt.originalEvent.touches[0].pageX : evt.pageX;
-      touchY = (touchsupport) ? evt.originalEvent.touches[0].pageY : evt.pageY;
+
+      touchX = (_this.touchsupport) ? evt.originalEvent.touches[0].pageX : evt.pageX;
+      touchY = (_this.touchsupport) ? evt.originalEvent.touches[0].pageY : evt.pageY;
       deltaX = touchX - lasttouchX;
       deltaY = touchY - lasttouchY;
       moveX  = touchX - touchStartX;
       moveY  = touchY - touchStartY;
-      
-      isTap = false;
-      
+
       // console.log("touchmove", touchX, touchY, deltaX, deltaY, moveX, moveY);
-      _this.trigger("touchmove", {
+      _this.emit("touchmove", {
         "lasttouchX": lasttouchX,
         "lasttouchY": lasttouchY,
         "touchX"    : touchX,
@@ -82,32 +82,30 @@
         "moveX"     : moveX,
         "moveY"     : moveY,
       });
-      
+
       // clearTimeout(movingtimer);
       // movingtimer = setTimeout(function(){ isDragging = false; },1000);
     }
     function onTouchEnd(evt){
       isDragging = false;
-      
+
       elapsedTime = Date.now() - touchStartTime;
       touchEndX = touchX;
       touchEndY = touchY;
-      
+
       // console.log("touchend");
-      _this.trigger("touchend", {
+      _this.emit("touchend", {
         "elapsedTime": elapsedTime,
         "touchEndX"  : touchEndX,
         "touchEndY"  : touchEndY,
         "moveX"      : moveX,
         "moveY"      : moveY,
-        "isTap"      : isTap,
       });
-      
+
       touchX = touchY = null;
       moveX = moveY = 0;
     }
-  };
-  ns.TouchController.prototype = Object.create(ns.EventDispatcher.prototype);
-  ns.TouchController.prototype.constructor = ns.TouchController;
-  
-})(this, document);
+  }
+}
+
+module.exports = TouchController;

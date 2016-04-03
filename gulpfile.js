@@ -11,10 +11,11 @@ const rename = require('gulp-rename');
 
 
 // tasks
-gulp.task('default', ['watch', 'js', 'js-min']);
+gulp.task('default', ['watch', 'build']);
+gulp.task('build', ['js', 'js-min']);
 
 gulp.task('watch', () => {
-  gulp.watch([GLOB_PATH], ['js', 'js-min']);
+  gulp.watch([GLOB_PATH], ['build']);
 });
 
 gulp.task('js', () => {

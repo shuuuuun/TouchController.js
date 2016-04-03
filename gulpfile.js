@@ -1,38 +1,37 @@
-var DEST_PATH = './build/';
+const DEST_PATH = './build/';
+const SRC_PATH = './src/';
+const GLOB_PATH = `${SRC_PATH}**/*.js`;
+const GLOB_UNBUILD = `!${SRC_PATH}**/_**`;
 
-var gulp = require('gulp');
-var plumber = require( 'gulp-plumber' );
-var watch = require('gulp-watch');
-var uglify = require('gulp-uglify');
-var gutil = require('gulp-util');
-var rename = require('gulp-rename');
-
-
-// default task
-if (gutil.env.develop) gulp.task('default',['watch', 'js-dev']);
-else gulp.task('default',['watch', 'js']);
+const gulp = require('gulp');
+const babel = require('gulp-babel');
+const plumber = require('gulp-plumber');
+const uglify = require('gulp-uglify');
+const rename = require('gulp-rename');
 
 
-gulp.task('watch',function(){
-  watch(['./src/*.js','./src/**/*.js','./src/**/_*.js'],function(){
-    if (gutil.env.develop) gulp.start('js-dev');
-    else gulp.start('js');
-  });
+// tasks
+gulp.task('default', ['watch', 'js', 'js-min']);
+
+gulp.task('watch', () => {
+  gulp.watch([GLOB_PATH], ['js', 'js-min']);
 });
 
-gulp.task('js-dev',function(){
+gulp.task('js', () => {
   // minifyしない
-  gulp.src(['./src/*.js','./src/**/*.js','./src/**/_*.js'])
+  gulp.src([GLOB_PATH, GLOB_UNBUILD])
     .pipe(plumber())
+    .pipe(babel())
     .pipe(gulp.dest(DEST_PATH));
 });
 
-gulp.task('js',function(){
+gulp.task('js-min', () => {
   // minifyする
-  gulp.src(['./src/*.js','./src/**/*.js','./src/**/_*.js'])
+  gulp.src([GLOB_PATH, GLOB_UNBUILD])
     .pipe(plumber())
-    .pipe(uglify({preserveComments: 'some'}))
-    .pipe(rename(function(path){
+    .pipe(babel())
+    .pipe(uglify({ preserveComments: 'some' }))
+    .pipe(rename((path) => {
       path.basename += '.min';
     }))
     .pipe(gulp.dest(DEST_PATH));

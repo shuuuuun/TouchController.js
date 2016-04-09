@@ -70,6 +70,7 @@ var TouchController = function (_EventEmitter) {
 
       this.onTouchStart = function (evt) {
         evt.preventDefault(); // enablePreventDefault
+        evt.stopPropagation(); // enableStopPropagation
 
         _this2.isDoubleTap = _this2.isTap;
         _this2.isDragging = true;

@@ -18,11 +18,18 @@ var TouchController = function (_EventEmitter) {
   _inherits(TouchController, _EventEmitter);
 
   function TouchController() {
+    var opts = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+
     _classCallCheck(this, TouchController);
 
     var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(TouchController).call(this));
 
-    _this.doubleTapDelay = 500;
+    _this.element = opts.element || document;
+    _this.touchstartElement = opts.touchstartElement || _this.element;
+    _this.touchmoveElement = opts.touchmoveElement || _this.element;
+    _this.touchendElement = opts.touchendElement || _this.element;
+
+    _this.doubleTapDelay = opts.doubleTapDelay || 500;
 
     _this.touchsupport = 'ontouchstart' in window;
     _this.touchstart = _this.touchsupport ? 'touchstart' : 'mousedown';
@@ -35,33 +42,24 @@ var TouchController = function (_EventEmitter) {
     _this.moveY = 0;
 
     _this.defineEventListener();
+    _this.setEvent();
     return _this;
   }
 
   _createClass(TouchController, [{
-    key: 'setElement',
-    value: function setElement(element) {
-      this.element = element;
-
-      this.setEvent();
-    }
-  }, {
     key: 'setEvent',
     value: function setEvent() {
-      this.element.addEventListener(this.touchstart, this.onTouchStart, false);
-      this.element.addEventListener(this.touchmove, this.ontouchMove, false);
-      this.element.addEventListener(this.touchend, this.onTouchEnd, false);
-
+      this.touchstartElement.addEventListener(this.touchstart, this.onTouchStart, false);
+      this.touchmoveElement.addEventListener(this.touchmove, this.ontouchMove, false);
+      this.touchendElement.addEventListener(this.touchend, this.onTouchEnd, false);
       // document.addEventListener(touchstart, function(){ return false; }, false); // disableDocumentTouch
-      // document.addEventListener(touchmove, ontouchMove, false);
-      // document.addEventListener(touchend, onTouchEnd, false);
     }
   }, {
     key: 'dispose',
     value: function dispose() {
-      this.element.removeEventListener(this.touchstart, this.onTouchStart, false);
-      this.element.removeEventListener(this.touchmove, this.ontouchMove, false);
-      this.element.removeEventListener(this.touchend, this.onTouchEnd, false);
+      this.touchstartElement.removeEventListener(this.touchstart, this.onTouchStart, false);
+      this.touchmoveElement.removeEventListener(this.touchmove, this.ontouchMove, false);
+      this.touchendElement.removeEventListener(this.touchend, this.onTouchEnd, false);
     }
   }, {
     key: 'defineEventListener',

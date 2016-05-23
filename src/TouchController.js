@@ -10,6 +10,8 @@ export default class TouchController extends EventEmitter2 {
     this.touchendElement = opts.touchendElement || this.element;
     
     this.doubleTapDelay = opts.doubleTapDelay || 500;
+    this.holdingDelay = opts.holdingDelay || 1000;
+    this.watchInterval = opts.watchInterval || 100;
     
     this.touchSupport = ('ontouchstart' in window);
     this.touchstart = (this.touchSupport) ? 'touchstart' : 'mousedown';
@@ -39,6 +41,9 @@ export default class TouchController extends EventEmitter2 {
   }
   
   defineEventListener() {
+    let watchTimer;
+    let delayTimer;
+    
     this.onTouchStart = (evt) => {
       evt.preventDefault(); // enablePreventDefault
       evt.stopPropagation(); // enableStopPropagation
@@ -51,6 +56,14 @@ export default class TouchController extends EventEmitter2 {
       this.touchStartX = (this.touchSupport) ? evt.touches[0].pageX : evt.pageX;
       this.touchStartY = (this.touchSupport) ? evt.touches[0].pageY : evt.pageY;
       
+      // TODO: ここにもdelayを入れねば
+      clearInterval(watchTimer);
+      watchTimer = setInterval(() => {
+        if (!this.isTouchMoving) {
+          this.emit('touchholding', this);
+        }
+      }, this.watchInterval);
+      
       this.emit('touchstart', {
         'touchStartTime': this.touchStartTime,
         'touchStartX'   : this.touchStartX,
@@ -62,6 +75,13 @@ export default class TouchController extends EventEmitter2 {
     
     this.onTouchMove = (evt) => {
       if (!this.isDragging) return;
+      this.isTouchMoving = true;
+      
+      clearTimeout(delayTimer);
+      delayTimer = setTimeout(() => {
+        this.isTouchMoving = false;
+      }, this.holdingDelay);
+      
       this.lasttouchX = this.touchX || this.touchStartX;
       this.lasttouchY = this.touchY || this.touchStartY;
       
@@ -91,6 +111,8 @@ export default class TouchController extends EventEmitter2 {
     
     this.onTouchEnd = (evt) => {
       this.isDragging = false;
+      this.isTouchMoving = false;
+      clearInterval(watchTimer);
       
       this.elapsedTime = Date.now() - this.touchStartTime;
       this.touchEndX = this.touchX;

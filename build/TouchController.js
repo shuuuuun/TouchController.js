@@ -30,11 +30,13 @@ var TouchController = function (_EventEmitter) {
     _this.touchendElement = opts.touchendElement || _this.element;
 
     _this.doubleTapDelay = opts.doubleTapDelay || 500;
+    _this.holdingDelay = opts.holdingDelay || 1000;
+    _this.watchInterval = opts.watchInterval || 100;
 
-    _this.touchsupport = 'ontouchstart' in window;
-    _this.touchstart = _this.touchsupport ? 'touchstart' : 'mousedown';
-    _this.touchmove = _this.touchsupport ? 'touchmove' : 'mousemove';
-    _this.touchend = _this.touchsupport ? 'touchend' : 'mouseup';
+    _this.touchSupport = 'ontouchstart' in window;
+    _this.touchstart = _this.touchSupport ? 'touchstart' : 'mousedown';
+    _this.touchmove = _this.touchSupport ? 'touchmove' : 'mousemove';
+    _this.touchend = _this.touchSupport ? 'touchend' : 'mouseup';
 
     _this.deltaX = 0;
     _this.deltaY = 0;
@@ -50,7 +52,7 @@ var TouchController = function (_EventEmitter) {
     key: 'setEvent',
     value: function setEvent() {
       this.touchstartElement.addEventListener(this.touchstart, this.onTouchStart, false);
-      this.touchmoveElement.addEventListener(this.touchmove, this.ontouchMove, false);
+      this.touchmoveElement.addEventListener(this.touchmove, this.onTouchMove, false);
       this.touchendElement.addEventListener(this.touchend, this.onTouchEnd, false);
       // document.addEventListener(touchstart, function(){ return false; }, false); // disableDocumentTouch
     }
@@ -58,13 +60,16 @@ var TouchController = function (_EventEmitter) {
     key: 'dispose',
     value: function dispose() {
       this.touchstartElement.removeEventListener(this.touchstart, this.onTouchStart, false);
-      this.touchmoveElement.removeEventListener(this.touchmove, this.ontouchMove, false);
+      this.touchmoveElement.removeEventListener(this.touchmove, this.onTouchMove, false);
       this.touchendElement.removeEventListener(this.touchend, this.onTouchEnd, false);
     }
   }, {
     key: 'defineEventListener',
     value: function defineEventListener() {
       var _this2 = this;
+
+      var watchTimer = void 0;
+      var delayTimer = void 0;
 
       this.onTouchStart = function (evt) {
         evt.preventDefault(); // enablePreventDefault
@@ -75,8 +80,16 @@ var TouchController = function (_EventEmitter) {
         _this2.isTap = true;
         _this2.touchStartTime = Date.now();
 
-        _this2.touchStartX = _this2.touchsupport ? evt.touches[0].pageX : evt.pageX;
-        _this2.touchStartY = _this2.touchsupport ? evt.touches[0].pageY : evt.pageY;
+        _this2.touchStartX = _this2.touchSupport ? evt.touches[0].pageX : evt.pageX;
+        _this2.touchStartY = _this2.touchSupport ? evt.touches[0].pageY : evt.pageY;
+
+        // TODO: ここにもdelayを入れねば
+        clearInterval(watchTimer);
+        watchTimer = setInterval(function () {
+          if (!_this2.isTouchMoving) {
+            _this2.emit('touchholding', _this2);
+          }
+        }, _this2.watchInterval);
 
         _this2.emit('touchstart', {
           'touchStartTime': _this2.touchStartTime,
@@ -87,13 +100,20 @@ var TouchController = function (_EventEmitter) {
         //return false; // enableReturnFalse
       };
 
-      this.ontouchMove = function (evt) {
+      this.onTouchMove = function (evt) {
         if (!_this2.isDragging) return;
+        _this2.isTouchMoving = true;
+
+        clearTimeout(delayTimer);
+        delayTimer = setTimeout(function () {
+          _this2.isTouchMoving = false;
+        }, _this2.holdingDelay);
+
         _this2.lasttouchX = _this2.touchX || _this2.touchStartX;
         _this2.lasttouchY = _this2.touchY || _this2.touchStartY;
 
-        _this2.touchX = _this2.touchsupport ? evt.touches[0].pageX : evt.pageX;
-        _this2.touchY = _this2.touchsupport ? evt.touches[0].pageY : evt.pageY;
+        _this2.touchX = _this2.touchSupport ? evt.touches[0].pageX : evt.pageX;
+        _this2.touchY = _this2.touchSupport ? evt.touches[0].pageY : evt.pageY;
         _this2.deltaX = _this2.touchX - _this2.lasttouchX;
         _this2.deltaY = _this2.touchY - _this2.lasttouchY;
         _this2.moveX = _this2.touchX - _this2.touchStartX;
@@ -118,6 +138,8 @@ var TouchController = function (_EventEmitter) {
 
       this.onTouchEnd = function (evt) {
         _this2.isDragging = false;
+        _this2.isTouchMoving = false;
+        clearInterval(watchTimer);
 
         _this2.elapsedTime = Date.now() - _this2.touchStartTime;
         _this2.touchEndX = _this2.touchX;

@@ -83,13 +83,16 @@ var TouchController = function (_EventEmitter) {
         _this2.touchStartX = _this2.touchSupport ? evt.touches[0].pageX : evt.pageX;
         _this2.touchStartY = _this2.touchSupport ? evt.touches[0].pageY : evt.pageY;
 
-        // TODO: ここにもdelayを入れねば
-        clearInterval(watchTimer);
-        watchTimer = setInterval(function () {
-          if (!_this2.isTouchMoving) {
-            _this2.emit('touchholding', _this2);
-          }
-        }, _this2.watchInterval);
+        // TODO: watchまわりもうちょっとうまく書きたい
+        setTimeout(function () {
+          clearInterval(watchTimer);
+          watchTimer = setInterval(function () {
+            if (!_this2.isTouchMoving) {
+              console.log('touchholding');
+              _this2.emit('touchholding', _this2);
+            }
+          }, _this2.watchInterval);
+        }, _this2.holdingDelay);
 
         _this2.emit('touchstart', {
           'touchStartTime': _this2.touchStartTime,

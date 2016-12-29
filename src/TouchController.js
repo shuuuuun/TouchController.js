@@ -121,8 +121,8 @@ export default class TouchController extends EventEmitter2 {
       clearWatcher();
       
       this.elapsedTime = Date.now() - this.touchStartTime;
-      this.touchEndX = this.touchX;
-      this.touchEndY = this.touchY;
+      this.touchEndX = (this.touchSupport) ? evt.changedTouches[0].pageX : evt.pageX;
+      this.touchEndY = (this.touchSupport) ? evt.changedTouches[0].pageY : evt.pageY;
       
       this.emit('touchend', {
         'elapsedTime': this.elapsedTime,

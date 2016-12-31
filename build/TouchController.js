@@ -79,6 +79,7 @@ var TouchController = function (_EventEmitter) {
       var setWatcher = function setWatcher() {
         clearWatcher();
         delayTimer = setTimeout(function () {
+          _this2.isTap = _this2.isDoubleTap = false;
           watchTimer = setInterval(function () {
             _this2.emit('touchholding', _this2);
           }, _this2.watchInterval);
